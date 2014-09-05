@@ -22,25 +22,15 @@
 
 #import <Foundation/Foundation.h>
 
-static NSString *const GIT = @"/usr/bin/git";
-static NSString *const IGNORE_PUSH_CONFIG = @"-c push.default=matching";
-static NSString *const CLONE = @"clone";
-static NSString *const FETCH = @"fetch";
-static NSString *const ORIGIN = @"origin";
-static NSString *const BRANCH = @"branch";
-static NSString *const COMMIT = @"commit";
-static NSString *const TAG = @"tag";
-static NSString *const ORIGIN_MASTER = @"origin/master";
-static NSString *const RESET = @"reset";
-static NSString *const HARD = @"--hard";
+typedef void (^ATZGitCompletion)(NSString *output, NSError *error);
 
 @interface ATZGit : NSObject
 
 + (void)cloneRepository:(NSString *)remotePath toLocalPath:(NSString *)localPath
-             completion:(void(^)(NSString *output, NSError *error))completion;
+             completion:(ATZGitCompletion)completion;
 
 + (void)updateRepository:(NSString *)localPath revision:(NSString *)revision
-              completion:(void(^)(NSString *output, NSError *error))completion;
+              completion:(ATZGitCompletion)completion;
 
 + (NSString *)parseRevisionFromDictionary:(NSDictionary *)dict;
 

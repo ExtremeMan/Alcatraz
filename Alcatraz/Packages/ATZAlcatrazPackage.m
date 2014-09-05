@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 
 #import "ATZAlcatrazPackage.h"
+
+#import "ATZPackageUtils.h"
 #import "ATZPluginInstaller.h"
 
 @implementation ATZAlcatrazPackage
@@ -38,9 +40,12 @@
         @"branch": @"deploy"
     }];
     
-    [alcatraz updateWithProgress:^(NSString *progressMessage, CGFloat progress){} completion:^(NSError *failure) {
-        if (failure)
+    [alcatraz updateWithProgress:^(NSString *progressMessage, CGFloat progress){} completion:^(NSError *failure, BOOL updated) {
+        if (failure) {
             NSLog(@"Alcatraz update failed! %@", failure);
+        } else if (updated) {
+            [ATZPackageUtils postUserNotificationForUpdatedPackage:alcatraz];
+        }
     }];
 }
 

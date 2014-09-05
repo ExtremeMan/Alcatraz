@@ -74,14 +74,14 @@ static NSArray *__allPackages;
 
   NSOperation *updateOperation = [NSBlockOperation blockOperationWithBlock:^{
     [package updateWithProgress:^(NSString *progressMessage, CGFloat progress){}
-                     completion:^(NSError *failure) {
+                     completion:^(NSError *failure, BOOL updated) {
       if (failure) {
         NSLog(@"[Alcatraz][ATZPackageUtils] Error while updating package %@! %@", package.name, failure);
         return;
+      } else if (updated) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kATZPackageWasUpdatedNotification object:package];
+        [self postUserNotificationForUpdatedPackage:package];
       }
-
-      [[NSNotificationCenter defaultCenter] postNotificationName:kATZPackageWasUpdatedNotification object:package];
-      [self postUserNotificationForUpdatedPackage:package];
     }];
   }];
   if ([[NSOperationQueue mainQueue] operations].lastObject) {

@@ -64,16 +64,22 @@ const CGFloat ATZFakeInstallProgress = 0.66;
 }
 
 - (void)updatePackage:(ATZPackage *)package progress:(void(^)(NSString *, CGFloat))progress
-           completion:(void(^)(NSError *error))completion {
+           completion:(void(^)(NSError *error, BOOL updated))completion {
     
     progress([NSString stringWithFormat:UPDATING_FORMAT, package.name], ATZFakeDownloadProgress);
     [self downloadOrUpdatePackage:package completion:^(NSString *output, NSError *error) {
         
         BOOL needsUpdate = output.length > 0;
-        if (error || !needsUpdate) { completion(error); return; }
+        if (error || !needsUpdate) { completion(error, NO); return; }
 
         progress([NSString stringWithFormat:INSTALLING_FORMAT, package.name], ATZFakeInstallProgress);
-        [self installPackage:package completion:completion];
+        [self installPackage:package completion:^(NSError *error){
+            if (error) {
+                completion(error, NO);
+            } else {
+                completion(nil, YES);
+            }
+      }];
     }];
 }
 

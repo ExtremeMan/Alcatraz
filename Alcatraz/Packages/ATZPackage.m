@@ -77,7 +77,7 @@
     [[self installer] installPackage:self progress:progress completion:completion];
 }
 
-- (void)updateWithProgress:(void (^)(NSString *, CGFloat))progress completion:(void (^)(NSError *))completion {
+- (void)updateWithProgress:(void (^)(NSString *, CGFloat))progress completion:(void (^)(NSError *, BOOL))completion {
     [[self installer] updatePackage:self progress:progress completion:completion];
 }
 

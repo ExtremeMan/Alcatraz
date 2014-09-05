@@ -45,7 +45,7 @@
                  completion:(void(^)(NSError *failure))completion;
 
 - (void)updateWithProgress:(void(^)(NSString *progressMessage, CGFloat progress))progress
-                completion:(void(^)(NSError *failure))completion;
+                completion:(void(^)(NSError *failure, BOOL updated))completion;
 
 - (void)removeWithCompletion:(void(^)(NSError *failure))completion;
 
