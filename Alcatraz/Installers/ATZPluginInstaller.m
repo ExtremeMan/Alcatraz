@@ -107,9 +107,14 @@ static NSString *const PROJECT = @"-project";
     }
 
     ATZShell *shell = [ATZShell new];
-    [shell executeCommand:XCODE_BUILD withArguments:@[PROJECT, xcodeProjPath] completion:^(NSString *output, NSError *error) {
+    [shell executeCommand:XCODE_BUILD withArguments:@[PROJECT, xcodeProjPath, @"build"] completion:^(NSString *output, NSError *error) {
         NSLog(@"Xcodebuild output: %@", output);
         completion(error);
+
+        // remove build folder
+        NSString *buildDir = [[xcodeProjPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"build"];
+        ATZShell *shell = [ATZShell new];
+        [shell executeCommand:@"/bin/rm" withArguments:@[@"-r", buildDir] completion:^(NSString *output, NSError *rmError) {}];
     }];
 }
 
