@@ -23,6 +23,8 @@
 #import "ATZPackage.h"
 #import "ATZInstaller.h"
 #import "ATZGit.h"
+#import "ATZConstants.h"
+#import "ATZUtils.h"
 #import "Alcatraz.h"
 
 @implementation ATZPackage
@@ -45,6 +47,10 @@
     self.remotePath = dictionary[@"url"];
     self.screenshotPath = dictionary[@"screenshot"];
     self.revision = [ATZGit parseRevisionFromDictionary:dictionary];
+
+    if (dictionary[kATZPackageLocalRelativePathKey]) {
+      self.localPath = [ATZPluginsSettings()[kATZSettingsPackageSourcesPathKey] stringByAppendingPathComponent:dictionary[kATZPackageLocalRelativePathKey]];
+    }
 }
 
 - (NSString *)projectPathFromRawPath:(NSString *)rawURL {

@@ -26,6 +26,7 @@
 #import "ATZDownloader.h"
 #import "ATZPackageFactory.h"
 #import "ATZPackageUtils.h"
+#import "ATZUtils.h"
 
 #import "ATZDetailItemButton.h"
 #import "ATZPackageTableCellView.h"
@@ -40,25 +41,38 @@
 
 #import "ATZRadialProgressControl.h"
 
+typedef enum : NSInteger {
+  ATZRemotePackageTab = 0,
+  ATZLocalPackageTab = 1,
+} ATZPackageTabIndex;
+
 static NSString *const ALL_ITEMS_ID = @"AllItemsToolbarItem";
 static NSString *const CLASS_PREDICATE_FORMAT = @"(self isKindOfClass: %@)";
 static NSString *const SEARCH_PREDICATE_FORMAT = @"(name contains[cd] %@ OR description contains[cd] %@)";
 static NSString *const SEARCH_AND_CLASS_PREDICATE_FORMAT = @"(name contains[cd] %@ OR description contains[cd] %@) AND (self isKindOfClass: %@)";
 
-@interface ATZPluginWindowController () <NSTableViewDelegate, NSControlTextEditingDelegate>
+@interface ATZPluginWindowController () <NSTabViewDelegate, NSTableViewDelegate, NSControlTextEditingDelegate, NSPathControlDelegate>
 @property (assign) IBOutlet NSPanel *previewPanel;
 @property (assign) IBOutlet NSImageView *previewImageView;
 @property (assign) IBOutlet NSSearchField *searchField;
-@property (assign) IBOutlet NSTableView *tableView;
+
+@property (assign) IBOutlet NSTabView *tabView;
+@property (assign) IBOutlet NSTableView *remoteTableView;
+@property (assign) IBOutlet NSTableView *localTableView;
+
+@property (assign) IBOutlet NSPathControl *pathControl;
+@property (assign) IBOutlet NSPathCell *pathCell;
 
 - (IBAction)checkboxPressed:(NSButton *)sender;
 - (IBAction)openPackageWebsitePressed:(NSButton *)sender;
 - (IBAction)displayScreenshotPressed:(NSButton *)sender;
 - (IBAction)segmentedControlPressed:(id)sender;
+- (IBAction)localPackagesLocationChanged:(id)sender;
 @end
 
 @interface ATZPluginWindowController ()
-@property (nonatomic, retain) NSArray *packages;
+@property (nonatomic, retain) NSArray *remotePackages;
+@property (nonatomic, retain) NSArray *localPackages;
 @property (nonatomic, retain) NSPredicate *filterPredicate;
 
 @property (nonatomic, assign) Class selectedPackageClass;
@@ -77,7 +91,9 @@ static NSString *const SEARCH_AND_CLASS_PREDICATE_FORMAT = @"(name contains[cd] 
         
         [self addVersionToWindow];
 
-        self.packages = [ATZPackageUtils allPackages];
+        self.localPackages = [ATZPackageUtils localPackages];
+        self.remotePackages = [ATZPackageUtils remotePackages];
+
         _filterPredicate = [NSPredicate predicateWithValue:YES];
 
         [[NSNotificationCenter defaultCenter] addObserver:self
@@ -102,13 +118,91 @@ static NSString *const SEARCH_AND_CLASS_PREDICATE_FORMAT = @"(name contains[cd] 
 - (void)windowDidLoad
 {
   [super windowDidLoad];
-  [self.tableView reloadData];
+
+  NSString *packagesPath = ATZPluginsSettings()[kATZSettingsPackageSourcesPathKey];
+  if (packagesPath) {
+    [_pathControl setURL:[NSURL fileURLWithPath:packagesPath]];
+  }
+  _pathCell.placeholderAttributedString = [[NSAttributedString alloc] initWithString:@"Choose directory with local packages..."
+                                                                          attributes:@{NSFontAttributeName: [NSFont systemFontOfSize:9],
+                                                                                       NSForegroundColorAttributeName: [NSColor blackColor]}];
+
+  [[self currentTableView] reloadData];
+}
+
+#pragma mark -
+#pragma mark Helpers
+
+- (ATZPackageTabIndex)selectedTabIndex
+{
+  return [_tabView indexOfTabViewItem:[_tabView selectedTabViewItem]];
+}
+
+- (NSTableView *)tableViewForTabIndex:(ATZPackageTabIndex)tabIndex
+{
+  switch (tabIndex) {
+    case ATZRemotePackageTab:
+      return _remoteTableView;
+
+    case ATZLocalPackageTab:
+      return _localTableView;
+  }
+}
+
+- (NSTableView *)currentTableView
+{
+  return [self tableViewForTabIndex:[self selectedTabIndex]];
+}
+
+- (NSArray *)currentPackageArray
+{
+  switch ([self selectedTabIndex]) {
+    case ATZRemotePackageTab:
+      return _remotePackages;
+
+    case ATZLocalPackageTab:
+      return _localPackages;
+  }
+}
+
+#pragma mark -
+#pragma mark NSTabView Delegate
+
+- (void)tabView:(NSTabView *)tabView willSelectTabViewItem:(NSTabViewItem *)tabViewItem
+{
+  [[self tableViewForTabIndex:[_tabView indexOfTabViewItem:tabViewItem]] reloadData];
+}
+
+#pragma mark -
+#pragma mark Path Control Delegate
+
+- (void)pathControl:(NSPathControl *)pathControl willDisplayOpenPanel:(NSOpenPanel *)openPanel
+{
+  [openPanel setAllowsMultipleSelection:NO];
+  [openPanel setCanChooseDirectories:YES];
+  [openPanel setCanChooseFiles:NO];
+  [openPanel setResolvesAliases:YES];
+  [openPanel setTitle:@"Choose a directory with packages"];
+  [openPanel setPrompt:@"Choose"];
+}
+
+- (IBAction)localPackagesLocationChanged:(NSPathControl *)sender
+{
+  // find the path component selected
+  NSPathComponentCell *component = [sender clickedPathComponentCell];
+  NSURL *url = [component URL];
+
+  // update displayed path
+  [sender setURL:url];
+
+  // save path to settings file
+  ATZPluginsUpdateSettingsValueForKey([url path], kATZSettingsPackageSourcesPathKey);
 }
 
 #pragma mark - Bindings
 
 - (IBAction)checkboxPressed:(ATZRadialProgressControl *)control {
-    ATZPackage *package = [self.packages filteredArrayUsingPredicate:self.filterPredicate][[self.tableView rowForView:control]];
+    ATZPackage *package = [[self currentPackageArray] filteredArrayUsingPredicate:self.filterPredicate][[[self currentTableView] rowForView:control]];
     
     if (package.isInstalled)
         [self removePackage:package andUpdateControl:control];
@@ -133,13 +227,13 @@ static NSString *const SEARCH_AND_CLASS_PREDICATE_FORMAT = @"(name contains[cd] 
 }
 
 - (IBAction)displayScreenshotPressed:(NSButton *)sender {
-    ATZPackage *package = [self.packages filteredArrayUsingPredicate:self.filterPredicate][[self.tableView rowForView:sender]];
+    ATZPackage *package = [[self currentPackageArray] filteredArrayUsingPredicate:self.filterPredicate][[[self currentTableView] rowForView:sender]];
     
     [self displayScreenshot:package.screenshotPath withTitle:package.name];
 }
 
 - (IBAction)openPackageWebsitePressed:(NSButton *)sender {
-    ATZPackage *package = [self.packages filteredArrayUsingPredicate:self.filterPredicate][[self.tableView rowForView:sender]];
+    ATZPackage *package = [[self currentPackageArray] filteredArrayUsingPredicate:self.filterPredicate][[[self currentTableView] rowForView:sender]];
 
     [self openWebsite:package.website];
 }
@@ -261,8 +355,9 @@ BOOL hasPressedCommandF(NSEvent *event) {
 
 - (void)listOfPackagesWasUpdated:(NSNotification *)notification
 {
-  self.packages = [ATZPackageUtils allPackages];
-  [self.tableView reloadData];
+  self.localPackages = [ATZPackageUtils localPackages];
+  self.remotePackages = [ATZPackageUtils remotePackages];
+  [[self currentTableView] reloadData];
 }
 
 - (void)packageWasUpdated:(NSNotification *)notification

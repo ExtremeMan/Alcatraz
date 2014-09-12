@@ -92,6 +92,10 @@ const CGFloat ATZFakeInstallProgress = 0.66;
 }
 
 - (NSString *)pathForDownloadedPackage:(ATZPackage *)package {
+    if (package.localPath) {
+      return package.localPath;
+    }
+
     return [[[self alcatrazDownloadsPath] stringByAppendingPathComponent:[self downloadRelativePath]]
                                            stringByAppendingPathComponent:package.name];
 }

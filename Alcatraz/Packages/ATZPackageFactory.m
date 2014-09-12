@@ -25,6 +25,7 @@
 #import "ATZColorScheme.h"
 #import "ATZProjectTemplate.h"
 #import "ATZFileTemplate.h"
+#import "ATZConstants.h"
 
 @implementation ATZPackageFactory
 
@@ -32,10 +33,10 @@ static NSDictionary *packageClasses;
 
 + (void)initialize {
     packageClasses = @{
-        @"plugins": [ATZPlugin class],
-        @"color_schemes": [ATZColorScheme class],
-        @"project_templates": [ATZProjectTemplate class],
-        @"file_templates": [ATZFileTemplate class]
+        kATZPluginsKey: [ATZPlugin class],
+        kATZColorSchemesKey: [ATZColorScheme class],
+        kATZProjectTemplatesKey: [ATZProjectTemplate class],
+        kATZFileTemplatesKey: [ATZFileTemplate class]
     };
 }
 

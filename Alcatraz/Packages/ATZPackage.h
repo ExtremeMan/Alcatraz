@@ -31,6 +31,7 @@
 @property (strong, nonatomic) NSString *summary;
 @property (strong, nonatomic) NSString *type;
 @property (strong, nonatomic) NSString *remotePath;
+@property (strong, nonatomic) NSString *localPath;
 @property (strong, nonatomic) NSString *revision;
 @property (strong, nonatomic) NSString *screenshotPath;
 @property (strong, nonatomic) NSString *iconName;

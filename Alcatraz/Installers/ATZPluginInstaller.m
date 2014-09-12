@@ -39,12 +39,20 @@ static NSString *const PROJECT = @"-project";
 #pragma mark - Abstract
 
 - (void)downloadPackage:(ATZPackage *)package completion:(void(^)(NSString *, NSError *))completion {
+    if (package.localPath) {
+      completion(@"Local package is already downloaded by definition", nil);
+      return;
+    }
 
     [ATZGit cloneRepository:package.remotePath toLocalPath:[self pathForDownloadedPackage:package]
                  completion:completion];
 }
 
 - (void)updatePackage:(ATZPackage *)package completion:(void(^)(NSString *, NSError *))completion {
+    if (package.localPath) {
+      completion(@"Local package should be updated manually", nil);
+      return;
+    }
 
     [ATZGit updateRepository:[self pathForDownloadedPackage:package] revision:package.revision
                   completion:completion];

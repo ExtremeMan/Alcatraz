@@ -7,6 +7,8 @@
 /*
  * Getters
  */
++ (NSArray *)localPackages;
++ (NSArray *)remotePackages;
 + (NSArray *)allPackages;
 
 /*

@@ -33,6 +33,11 @@ static NSString *const DOWNLOADED_COLOR_SCHEMES_RELATIVE_PATH = @"FontAndColorTh
 
 
 - (void)downloadPackage:(ATZPackage *)package completion:(void(^)(NSString *, NSError *))completion {
+    if (package.localPath) {
+      completion(@"Local package is already downloaded by definition", nil);
+      return;
+    }
+
     ATZDownloader *downloader = [ATZDownloader new];
     [downloader downloadFileFromPath:package.remotePath
         progress:^(CGFloat progress) {} // todo: wire up the progress

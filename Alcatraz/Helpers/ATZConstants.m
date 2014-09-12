@@ -5,6 +5,20 @@ NSString *const kATZPluginsRepoPath = @"https://raw.github.com/supermarin/alcatr
 NSString *const kATZPluginsInstallDirectory = @"Library/Application Support/Developer/Shared/Xcode/Plug-ins";
 NSString *const kATZPluginsDataDirectory = @"Library/Application Support/Alcatraz";
 
+NSString *const kATZSettingsFile = @"settings.plist";
+NSString *const kATZSettingsPackageSourcesPathKey = @"ATZPackageSourcesPath";;
+
+NSString *const kATZColorSchemesKey = @"color_schemes";
+NSString *const kATZProjectTemplatesKey = @"project_templates";
+NSString *const kATZFileTemplatesKey = @"file_templates";
+NSString *const kATZPluginsKey = @"plugins";
+
+NSString *const kATZPackageNameKey = @"name";
+NSString *const kATZPackageVersionKey = @"CFBundleShortVersionString";
+NSString *const kATZPackageLocalRelativePathKey = @"ATZPackageLocalPath";
+NSString *const kATZPackageDescriptionKey = @"ATZPackageDescription";
+NSString *const kATZPackageCategoryKey = @"ATZPackageCategory";
+
 NSString *const kATZListOfPackagesWasUpdatedNotification = @"ATZListOfPackagesWasUpdatedNotification";
 NSString *const kATZPackageWasInstalledNotification = @"ATZPackageWasInstalledNotification";
 NSString *const kATZPackageWasUpdatedNotification = @"ATZPackageWasUpdatedNotification";
