@@ -19,6 +19,8 @@ NSString *const kATZPackageLocalRelativePathKey = @"ATZPackageLocalPath";
 NSString *const kATZPackageDescriptionKey = @"ATZPackageDescription";
 NSString *const kATZPackageCategoryKey = @"ATZPackageCategory";
 
+NSString *const kATZLocalPackageScreenshotName = @"ATZPluginScreenshot.png";
+
 NSString *const kATZListOfPackagesWasUpdatedNotification = @"ATZListOfPackagesWasUpdatedNotification";
 NSString *const kATZPackageWasInstalledNotification = @"ATZPackageWasInstalledNotification";
 NSString *const kATZPackageWasUpdatedNotification = @"ATZPackageWasUpdatedNotification";

@@ -68,6 +68,23 @@
     else return self.remotePath;
 }
 
+- (NSString *)screenshotPath
+{
+  if (_screenshotPath) {
+    return _screenshotPath;
+  }
+
+  if (!_localPath) {
+    return nil;
+  }
+
+  NSURL *localScreenshotUrl = [NSURL fileURLWithPath:[_localPath stringByAppendingPathComponent:kATZLocalPackageScreenshotName]];
+  if ([[NSFileManager defaultManager] fileExistsAtPath:[localScreenshotUrl path]]) {
+    _screenshotPath = [localScreenshotUrl absoluteString];
+  }
+
+  return _screenshotPath;
+}
 
 #pragma mark - Abstract
 
