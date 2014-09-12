@@ -235,7 +235,11 @@ static NSString *const SEARCH_AND_CLASS_PREDICATE_FORMAT = @"(name contains[cd] 
 - (IBAction)openPackageWebsitePressed:(NSButton *)sender {
     ATZPackage *package = [[self currentPackageArray] filteredArrayUsingPredicate:self.filterPredicate][[[self currentTableView] rowForView:sender]];
 
-    [self openWebsite:package.website];
+    if (package.localPath) {
+      [self openFolder:package.localPath];
+    } else {
+      [self openWebsite:package.website];
+    }
 }
 
 - (void)controlTextDidChange:(NSNotification *)note {
@@ -297,6 +301,10 @@ BOOL hasPressedCommandF(NSEvent *event) {
 
 - (void)openWebsite:(NSString *)address {
     [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:address]];
+}
+
+- (void)openFolder:(NSString *)path {
+  [[NSWorkspace sharedWorkspace] openURL:[NSURL fileURLWithPath:path]];
 }
 
 - (void)displayScreenshot:(NSString *)screenshotPath withTitle:(NSString *)title {
