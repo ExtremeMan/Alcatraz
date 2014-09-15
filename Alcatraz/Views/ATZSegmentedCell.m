@@ -15,12 +15,20 @@
 #import "ATZTemplate.h"
 
 static NSString *const ALL_ITEMS_TITLE = @"All";
+static NSString *const NEW_ITEMS_TITLE = @"New";
 
 @implementation ATZSegmentedCell
 
 - (void)drawSegment:(NSInteger)segment inFrame:(NSRect)frame withView:(NSView *)controlView {
     if (ATZFilterSegmentAll == segment) {
         [self drawAllItemsSegmentInFrame:frame];
+    } else if (ATZFilterSegmentNew == segment) {
+      CGFloat cellWidth = frame.size.width / self.segmentCount;
+      CGRect segmentFrame = CGRectIntegral(CGRectMake(segment * cellWidth,
+                                                      frame.origin.y,
+                                                      frame.size.width,
+                                                      frame.size.height));
+        [self drawNewItemsSegmentInFrame:segmentFrame];
     } else {
         NSImage *icon = [self iconForSegment:segment];
         CGFloat cellWidth = frame.size.width / self.segmentCount;
@@ -71,32 +79,79 @@ static NSString *const ALL_ITEMS_TITLE = @"All";
     [title drawInRect:frame];
 }
 
-- (NSMutableAttributedString *)allItemsLabelUnselected {
-    static NSMutableAttributedString *allItemsLabelUnselected;
-    if (!allItemsLabelUnselected) {
-        allItemsLabelUnselected = [[NSMutableAttributedString alloc] initWithString:ALL_ITEMS_TITLE];
-        NSRange fullRange = NSMakeRange(0, [allItemsLabelUnselected length]);
-        [allItemsLabelUnselected addAttribute:NSFontAttributeName value:[NSFont systemFontOfSize:13.0f] range:fullRange];
-        [allItemsLabelUnselected addAttribute:NSForegroundColorAttributeName
-                                        value:[NSColor blackColor]
-                                        range:fullRange];
-    }
-    return allItemsLabelUnselected;
-}
-
-- (NSMutableAttributedString *)allItemsLabelSelected {
-    static NSMutableAttributedString *allItemsLabelSelected;
-    if (!allItemsLabelSelected) {
-        allItemsLabelSelected = [[NSMutableAttributedString alloc] initWithString:ALL_ITEMS_TITLE];
-        NSRange fullRange = NSMakeRange(0, [allItemsLabelSelected length]);
-        [allItemsLabelSelected addAttribute:NSFontAttributeName value:[NSFont systemFontOfSize:13.0f] range:fullRange];
-        [allItemsLabelSelected addAttribute:NSForegroundColorAttributeName
-                                       value:[NSColor colorWithDeviceRed:0.139 green:0.449 blue:0.867 alpha:1.000]
-                                       range:fullRange];
-    }
-    return allItemsLabelSelected;
+- (void)drawNewItemsSegmentInFrame:(CGRect)frame {
+  BOOL selected = self.selectedSegment == 4;
+  NSAttributedString *title = selected ? [self newItemsLabelSelected] : [self newItemsLabelUnselected];
+  frame.origin.y = (frame.size.height - title.size.height) - 2;
+  [title drawInRect:frame];
 }
 
 
+#pragma mark -
+#pragma mark Working with labels
+
+- (NSFont *)titleFont
+{
+  static NSFont *titleFont;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    titleFont = [NSFont systemFontOfSize:13.0f];
+  });
+  return titleFont;
+}
+
+- (NSColor *)titleColor:(BOOL)selected
+{
+  static NSColor *selectedColor;
+  static NSColor *unselectedColor;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    selectedColor = [NSColor colorWithDeviceRed:0.139 green:0.449 blue:0.867 alpha:1.000];
+    unselectedColor = [NSColor blackColor];
+  });
+  return selected ? selectedColor : unselectedColor;
+}
+
+- (NSDictionary *)attributesForTitleStateSelected:(BOOL)selected
+{
+  return @{NSFontAttributeName: [self titleFont],
+           NSForegroundColorAttributeName: [self titleColor:selected]};
+}
+
+- (NSAttributedString *)allItemsLabelUnselected {
+  static NSAttributedString *labelUnselected;
+  if (!labelUnselected) {
+    labelUnselected = [[NSAttributedString alloc] initWithString:ALL_ITEMS_TITLE
+                                                      attributes:[self attributesForTitleStateSelected:NO]];
+  }
+  return labelUnselected;
+}
+
+- (NSAttributedString *)allItemsLabelSelected {
+  static NSAttributedString *labelSelected;
+  if (!labelSelected) {
+    labelSelected = [[NSAttributedString alloc] initWithString:ALL_ITEMS_TITLE
+                                                    attributes:[self attributesForTitleStateSelected:YES]];
+  }
+  return labelSelected;
+}
+
+- (NSAttributedString *)newItemsLabelUnselected {
+  static NSAttributedString *labelUnselected;
+  if (!labelUnselected) {
+    labelUnselected = [[NSAttributedString alloc] initWithString:NEW_ITEMS_TITLE
+                                                      attributes:[self attributesForTitleStateSelected:NO]];
+  }
+  return labelUnselected;
+}
+
+- (NSAttributedString *)newItemsLabelSelected {
+  static NSAttributedString *labelSelected;
+  if (!labelSelected) {
+    labelSelected = [[NSAttributedString alloc] initWithString:NEW_ITEMS_TITLE
+                                                    attributes:[self attributesForTitleStateSelected:YES]];
+  }
+  return labelSelected;
+}
 
 @end

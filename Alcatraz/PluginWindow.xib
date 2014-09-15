@@ -14,6 +14,7 @@
                 <outlet property="previewPanel" destination="1347" id="1364"/>
                 <outlet property="remoteTableView" destination="XyI-GZ-ZC6" id="FzP-B6-1zF"/>
                 <outlet property="searchField" destination="8my-Ez-NU4" id="58K-3e-lWQ"/>
+                <outlet property="segmentedControl" destination="1lO-z8-UW7" id="4D3-dd-qTG"/>
                 <outlet property="tabView" destination="CZS-MJ-sRz" id="1YT-Ny-N0V"/>
                 <outlet property="window" destination="125" id="fbl-LK-VKh"/>
             </connections>
@@ -460,6 +461,9 @@
                                 </view>
                             </tabViewItem>
                         </tabViewItems>
+                        <connections>
+                            <outlet property="delegate" destination="-2" id="3w6-SY-Ra9"/>
+                        </connections>
                     </tabView>
                     <searchField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="8my-Ez-NU4">
                         <rect key="frame" x="349" y="610" width="139" height="22"/>
@@ -476,7 +480,7 @@
                         </connections>
                     </searchField>
                     <segmentedControl focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="1lO-z8-UW7">
-                        <rect key="frame" x="11" y="608" width="106" height="25"/>
+                        <rect key="frame" x="11" y="608" width="140" height="25"/>
                         <segmentedCell key="cell" borderStyle="border" focusRingType="none" alignment="left" style="texturedSquare" trackingMode="selectOne" id="vaZ-Yu-jkt" customClass="ATZSegmentedCell">
                             <font key="font" metaFont="system"/>
                             <segments>
@@ -490,6 +494,7 @@
                                 <segment toolTip="Templates" image="toolbar_templates" width="25">
                                     <nil key="label"/>
                                 </segment>
+                                <segment label="New" toolTip="Recently Added Packages" width="33"/>
                             </segments>
                         </segmentedCell>
                         <connections>

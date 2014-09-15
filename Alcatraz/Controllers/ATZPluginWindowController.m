@@ -48,13 +48,14 @@ typedef enum : NSInteger {
 
 static NSString *const ALL_ITEMS_ID = @"AllItemsToolbarItem";
 static NSString *const CLASS_PREDICATE_FORMAT = @"(self isKindOfClass: %@)";
-static NSString *const SEARCH_PREDICATE_FORMAT = @"(name contains[cd] %@ OR description contains[cd] %@)";
-static NSString *const SEARCH_AND_CLASS_PREDICATE_FORMAT = @"(name contains[cd] %@ OR description contains[cd] %@) AND (self isKindOfClass: %@)";
+static NSString *const NEW_PREDICATE_FORMAT = @"(name IN %@)";
+static NSString *const SEARCH_PREDICATE_FORMAT = @"(name contains[cd] %@ OR summary contains[cd] %@)";
 
 @interface ATZPluginWindowController () <NSTabViewDelegate, NSTableViewDelegate, NSControlTextEditingDelegate, NSPathControlDelegate>
 @property (assign) IBOutlet NSPanel *previewPanel;
 @property (assign) IBOutlet NSImageView *previewImageView;
 @property (assign) IBOutlet NSSearchField *searchField;
+@property (assign) IBOutlet NSSegmentedControl *segmentedControl;
 
 @property (assign) IBOutlet NSTabView *tabView;
 @property (assign) IBOutlet NSTableView *remoteTableView;
@@ -75,7 +76,6 @@ static NSString *const SEARCH_AND_CLASS_PREDICATE_FORMAT = @"(name contains[cd] 
 @property (nonatomic, retain) NSArray *localPackages;
 @property (nonatomic, retain) NSPredicate *filterPredicate;
 
-@property (nonatomic, assign) Class selectedPackageClass;
 @property (nonatomic, assign) NSView *hoverButtonsContainer;
 @end
 
@@ -94,7 +94,7 @@ static NSString *const SEARCH_AND_CLASS_PREDICATE_FORMAT = @"(name contains[cd] 
         self.localPackages = [ATZPackageUtils localPackages];
         self.remotePackages = [ATZPackageUtils remotePackages];
 
-        _filterPredicate = [NSPredicate predicateWithValue:YES];
+        [self updatePredicate];
 
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(listOfPackagesWasUpdated:)
@@ -126,6 +126,15 @@ static NSString *const SEARCH_AND_CLASS_PREDICATE_FORMAT = @"(name contains[cd] 
   _pathCell.placeholderAttributedString = [[NSAttributedString alloc] initWithString:@"Choose directory with local packages..."
                                                                           attributes:@{NSFontAttributeName: [NSFont systemFontOfSize:9],
                                                                                        NSForegroundColorAttributeName: [NSColor blackColor]}];
+
+  if ([[ATZPackageUtils addedRemotePackages] count]) {
+    [_segmentedControl setSelectedSegment:4];
+    [self updatePredicate];
+  } else if ([[ATZPackageUtils addedLocalPackages] count]) {
+    [_tabView selectTabViewItem:[_tabView tabViewItemAtIndex:1]];
+    [_segmentedControl setSelectedSegment:4];
+    [self updatePredicate];
+  }
 
   [[self currentTableView] reloadData];
 }
@@ -168,8 +177,9 @@ static NSString *const SEARCH_AND_CLASS_PREDICATE_FORMAT = @"(name contains[cd] 
 #pragma mark -
 #pragma mark NSTabView Delegate
 
-- (void)tabView:(NSTabView *)tabView willSelectTabViewItem:(NSTabViewItem *)tabViewItem
+- (void)tabView:(NSTabView *)tabView didSelectTabViewItem:(NSTabViewItem *)tabViewItem
 {
+  [self updatePredicate];
   [[self tableViewForTabIndex:[_tabView indexOfTabViewItem:tabViewItem]] reloadData];
 }
 
@@ -221,8 +231,6 @@ static NSString *const SEARCH_AND_CLASS_PREDICATE_FORMAT = @"(name contains[cd] 
 }
 
 - (IBAction)segmentedControlPressed:(id)sender {
-    NSInteger selectedSegment = [sender selectedSegment];
-    self.selectedPackageClass = [self segmentClassMapping][@(selectedSegment)];
     [self updatePredicate];
 }
 
@@ -278,25 +286,34 @@ BOOL hasPressedCommandF(NSEvent *event) {
 }
 
 - (void)updatePredicate {
-    // TODO: refactor, use compound predicates.
+  NSMutableArray *predicates = [NSMutableArray arrayWithCapacity:2];
+  switch ([_segmentedControl selectedSegment]) {
+    case ATZFilterSegmentAll:
+      [predicates addObject:[NSPredicate predicateWithValue:YES]];
+      break;
 
-    NSString *searchText = self.searchField.stringValue;
-    // filter by type and search field text
-    if (self.selectedPackageClass && searchText.length > 0) {
-        self.filterPredicate = [NSPredicate predicateWithFormat:SEARCH_AND_CLASS_PREDICATE_FORMAT, searchText, searchText, self.selectedPackageClass];
-        
-    // filter by type
-    } else if (self.selectedPackageClass) {
-        self.filterPredicate = [NSPredicate predicateWithFormat:CLASS_PREDICATE_FORMAT, self.selectedPackageClass];
-        
-    // filter by search field text
-    } else if (searchText.length > 0) {
-        self.filterPredicate = [NSPredicate predicateWithFormat:SEARCH_PREDICATE_FORMAT, searchText, searchText];
-        
-    // show all
-    } else {
-        self.filterPredicate = [NSPredicate predicateWithValue:YES];
+    case ATZFilterSegmentNew:
+    {
+      NSSet *addedSet = [self selectedTabIndex] == ATZRemotePackageTab ? [ATZPackageUtils addedRemotePackages] : [ATZPackageUtils addedLocalPackages];
+      [predicates addObject:[NSPredicate predicateWithFormat:NEW_PREDICATE_FORMAT, addedSet]];
+      break;
     }
+
+    default:
+    {
+      NSInteger selectedSegment = [_segmentedControl selectedSegment];
+      Class selectedPackageClass = [self segmentClassMapping][@(selectedSegment)];
+      [predicates addObject:[NSPredicate predicateWithFormat:CLASS_PREDICATE_FORMAT, selectedPackageClass]];
+    }
+      break;
+  }
+
+  NSString *searchText = self.searchField.stringValue;
+  if (searchText.length > 0) {
+    [predicates addObject:[NSPredicate predicateWithFormat:SEARCH_PREDICATE_FORMAT, searchText, searchText]];
+  }
+
+  self.filterPredicate = [NSCompoundPredicate andPredicateWithSubpredicates:predicates];
 }
 
 - (void)openWebsite:(NSString *)address {

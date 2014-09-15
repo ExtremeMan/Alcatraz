@@ -30,9 +30,6 @@ static NSDictionary *__cachedPackages;
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     shared = [[ATZPackageUtils alloc] init];
-
-    __addedRemotePackageNames = [NSMutableSet set];
-    __addedLocalPackageNames = [NSMutableSet set];
   });
   return shared;
 }
@@ -55,6 +52,16 @@ static NSDictionary *__cachedPackages;
   return [__localPackages arrayByAddingObjectsFromArray:__remotePackages];
 }
 
++ (NSSet *)addedLocalPackages
+{
+  return __addedLocalPackageNames;
+}
+
++ (NSSet *)addedRemotePackages
+{
+  return __addedRemotePackageNames;
+}
+
 #pragma mark -
 #pragma mark Public Methods
 
@@ -72,9 +79,13 @@ static NSDictionary *__cachedPackages;
       [self updatePackages:__remotePackages];
 
       // get added local package names and inform people about them
-      [__addedRemotePackageNames addObjectsFromArray:[self addedPackageNamesTo:packageList forCachedListKey:kATZCachedRemotePackagesListKey]];
-      if ([__addedRemotePackageNames count] && [[self cachedPackageLists][kATZCachedRemotePackagesListKey] count]) {
-        [self postUserNotificationForAddedPackages:__addedRemotePackageNames];
+      if (!__addedRemotePackageNames) {
+        __addedRemotePackageNames = [NSMutableSet set];
+      }
+      NSArray *justAddedPackages = [self addedPackageNamesTo:packageList forCachedListKey:kATZCachedRemotePackagesListKey];
+      [__addedRemotePackageNames addObjectsFromArray:justAddedPackages];
+      if ([justAddedPackages count] && [[self cachedPackageLists][kATZCachedRemotePackagesListKey] count]) {
+        [self postUserNotificationForAddedPackages:justAddedPackages];
       }
 
       // cache package list
@@ -91,9 +102,13 @@ static NSDictionary *__cachedPackages;
   [self updatePackages:__localPackages];
 
   // get added local package names and inform people about them
-  [__addedLocalPackageNames addObjectsFromArray:[self addedPackageNamesTo:localPackagesRaw forCachedListKey:kATZCachedLocalPackagesListKey]];
-  if ([__addedLocalPackageNames count]) {
-    [self postUserNotificationForAddedPackages:__addedLocalPackageNames];
+  if (!__addedLocalPackageNames) {
+    __addedLocalPackageNames = [NSMutableSet set];
+  }
+  NSArray *justAddedPackages = [self addedPackageNamesTo:localPackagesRaw forCachedListKey:kATZCachedLocalPackagesListKey];
+  [__addedLocalPackageNames addObjectsFromArray:justAddedPackages];
+  if ([justAddedPackages count]) {
+    [self postUserNotificationForAddedPackages:justAddedPackages];
   }
 
   // cache package list
@@ -315,14 +330,14 @@ static NSDictionary *__cachedPackages;
   [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notification];
 }
 
-+ (void)postUserNotificationForAddedPackages:(NSSet *)packages
++ (void)postUserNotificationForAddedPackages:(NSArray *)packages
 {
   [self _becomeUserNotificationCenterDelegate];
 
   NSUserNotification *notification = [NSUserNotification new];
   notification.title = [NSString stringWithFormat:@"New Packages Added"];
   if ([packages count] == 1) {
-    notification.informativeText = [NSString stringWithFormat:@"Package %@ is now available.\nOpen Package Manager to install it.", [packages anyObject]];
+    notification.informativeText = [NSString stringWithFormat:@"Package %@ is now available.\nOpen Package Manager to install it.", packages[0]];
   } else {
     notification.informativeText = [NSString stringWithFormat:@"%lu new packages are available!\nOpen Package Manager to install.", (unsigned long)[packages count]];
   }

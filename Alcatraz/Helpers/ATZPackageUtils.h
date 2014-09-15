@@ -11,6 +11,9 @@
 + (NSArray *)remotePackages;
 + (NSArray *)allPackages;
 
++ (NSSet *)addedLocalPackages;
++ (NSSet *)addedRemotePackages;
+
 /*
  * Reloaders
  */
