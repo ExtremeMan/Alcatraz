@@ -5,7 +5,10 @@ extern NSString *const kATZPluginsRepoPath;
 extern NSString *const kATZPluginsInstallDirectory;
 extern NSString *const kATZPluginsDataDirectory;
 
-// settings file
+// settings and caches
+extern NSString *const kATZCachedPackagesFile;
+extern NSString *const kATZCachedRemotePackagesListKey;
+extern NSString *const kATZCachedLocalPackagesListKey;
 extern NSString *const kATZSettingsFile;
 extern NSString *const kATZSettingsPackageSourcesPathKey;
 

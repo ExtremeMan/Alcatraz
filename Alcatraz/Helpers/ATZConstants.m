@@ -5,6 +5,9 @@ NSString *const kATZPluginsRepoPath = @"https://raw.github.com/supermarin/alcatr
 NSString *const kATZPluginsInstallDirectory = @"Library/Application Support/Developer/Shared/Xcode/Plug-ins";
 NSString *const kATZPluginsDataDirectory = @"Library/Application Support/Alcatraz";
 
+NSString *const kATZCachedPackagesFile = @"packages.plist";
+NSString *const kATZCachedRemotePackagesListKey = @"remote";
+NSString *const kATZCachedLocalPackagesListKey = @"local";
 NSString *const kATZSettingsFile = @"settings.plist";
 NSString *const kATZSettingsPackageSourcesPathKey = @"ATZPackageSourcesPath";;
 
