@@ -27,4 +27,9 @@ static NSString *const PLUGIN_ICON_NAME = @"toolbar_plugins";
 
 @interface ATZPlugin : ATZPackage
 
+@property (nonatomic, strong) NSString *version;
+@property (nonatomic, strong) NSString *installedVersion;
+
+- (void)reloadInstalledVersion;
+
 @end

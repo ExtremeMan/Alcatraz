@@ -21,13 +21,27 @@
 // THE SOFTWARE.
 
 #import "ATZPlugin.h"
+
+#import "ATZConstants.h"
 #import "ATZPluginInstaller.h"
+#import "ATZUtils.h"
 
 static NSString *const PLUGIN = @"Plugin";
 static NSString *const XCPLUGIN = @".xcplugin";
 
 @implementation ATZPlugin
 @synthesize requiresRestart;
+
+- (instancetype)initWithDictionary:(NSDictionary *)dictionary
+{
+  self = [super initWithDictionary:dictionary];
+  if (self) {
+    if (dictionary[kATZPackageVersionKey]) {
+      _version = dictionary[kATZPackageVersionKey];
+    }
+  }
+  return self;
+}
 
 - (ATZInstaller *)installer {
     return [ATZPluginInstaller sharedInstaller];
@@ -43,6 +57,61 @@ static NSString *const XCPLUGIN = @".xcplugin";
 
 - (NSString *)iconName {
     return PLUGIN_ICON_NAME;
+}
+
+- (NSString *)version
+{
+  if (_version) {
+    return _version;
+  }
+
+  _version = [self _availablePackagePlist][kATZPackageVersionKey];
+  return _version;
+}
+
+- (NSString *)installedVersion
+{
+  if (_installedVersion || ![self isInstalled]) {
+    return _installedVersion;
+  }
+
+  _installedVersion = [self _installedPackagePlist][kATZPackageVersionKey];
+  return _installedVersion;
+}
+
+- (void)reloadInstalledVersion
+{
+  _installedVersion = nil;
+  [self installedVersion];
+}
+
+#pragma mark -
+#pragma mark - Helpers
+
+- (NSDictionary *)_installedPackagePlist
+{
+  NSString *pluginInstallPath = [[ATZPluginsInstallPath() stringByAppendingPathComponent:self.name] stringByAppendingPathExtension:@"xcplugin"];
+  NSString *pluginInfoPlist = [pluginInstallPath stringByAppendingPathComponent:@"Contents/Info.plist"];
+  return [NSDictionary dictionaryWithContentsOfFile:pluginInfoPlist];
+}
+
+- (NSDictionary *)_availablePackagePlist
+{
+  NSString *projectSourcePath = self.localPath;
+  if (!projectSourcePath) {
+    projectSourcePath = [self.installer pathForDownloadedPackage:self];
+  }
+
+  NSFileManager *manager = [NSFileManager defaultManager];
+  NSDirectoryEnumerator *dirEnum = [manager enumeratorAtPath:projectSourcePath];
+  NSString *file;
+  NSString *infoPlistFile = [self.name stringByAppendingString:@"-Info.plist"];
+  while ((file = [dirEnum nextObject])) {
+    if ([file hasSuffix:infoPlistFile]) {
+      return [NSDictionary dictionaryWithContentsOfFile:[projectSourcePath stringByAppendingPathComponent:file]];
+    }
+  }
+  return nil;
 }
 
 @end
