@@ -23,6 +23,7 @@
 
 #import "ATZPackageTableCellView.h"
 #import "ATZPackage.h"
+#import "ATZPlugin.h"
 
 @interface ATZPackageTableCellView()
 @property (assign) BOOL isHighlighted;
@@ -47,6 +48,26 @@
     [self showScreenshotButtonIfNeeded];
     [self.websiteButton setToolTip:[(ATZPackage *)self.objectValue website]];
     [self setButtonsHighlighted:self.isHighlighted animated:NO];
+
+    [self.versionsLabel setTextColor:[NSColor knobColor]];
+    if ([self.objectValue isKindOfClass:[ATZPlugin class]]) {
+      ATZPlugin *plugin = (ATZPlugin *)self.objectValue;
+      if ([plugin isInstalled]) {
+        [self.versionsLabel setTitle:[NSString stringWithFormat:@"Installed version: %@.", plugin.installedVersion]];
+        if ([plugin isOutdated]) {
+          [self.versionsLabel setTextColor:[[NSColor redColor] colorWithAlphaComponent:0.8]];
+        }
+      } else if ([plugin localPath]) {
+        [self.versionsLabel setTitle:[NSString stringWithFormat:@"Available version: %@.", plugin.version]];
+      } else {
+        [self.versionsLabel setTitle:@""];
+      }
+    } else {
+      [self.versionsLabel setTitle:@""];
+    }
+
+    [super viewWillDraw];
+
 }
 
 - (void)mouseEntered:(NSEvent *)theEvent {

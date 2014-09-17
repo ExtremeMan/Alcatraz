@@ -5,6 +5,7 @@
 #import "ATZDownloader.h"
 #import "ATZPackage.h"
 #import "ATZPackageFactory.h"
+#import "ATZPlugin.h"
 #import "ATZPBXProjParser.h"
 #import "ATZUtils.h"
 
@@ -140,6 +141,9 @@ static NSDictionary *__cachedPackages;
         NSLog(@"[Alcatraz][ATZPackageUtils] Error while updating package %@! %@", package.name, failure);
         return;
       } else if (updated) {
+        if ([package isKindOfClass:[ATZPlugin class]]) {
+          [(ATZPlugin *)package reloadInstalledVersion];
+        }
         [[NSNotificationCenter defaultCenter] postNotificationName:kATZPackageWasUpdatedNotification object:package];
         [self postUserNotificationForUpdatedPackage:package];
       }

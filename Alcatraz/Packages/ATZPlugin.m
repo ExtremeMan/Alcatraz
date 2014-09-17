@@ -85,6 +85,11 @@ static NSString *const XCPLUGIN = @".xcplugin";
   [self installedVersion];
 }
 
+- (BOOL)isOutdated
+{
+  return ([self isInstalled]) && ([self.installedVersion compare:self.version] == NSOrderedAscending);
+}
+
 #pragma mark -
 #pragma mark - Helpers
 
