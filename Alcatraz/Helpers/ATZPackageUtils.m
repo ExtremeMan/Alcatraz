@@ -134,6 +134,15 @@ static NSDictionary *__cachedPackages;
     return;
   }
 
+  // update local packages only on Xcode start up
+  if ([package isKindOfClass:[ATZPlugin class]] && [(ATZPlugin *)package localPath]) {
+    if ([Alcatraz sharedPlugin]) {
+      return;
+    }
+    // cache installed plugin version
+    [(ATZPlugin *)package installedVersion];
+  }
+
   NSOperation *updateOperation = [NSBlockOperation blockOperationWithBlock:^{
     [package updateWithProgress:^(NSString *progressMessage, CGFloat progress){}
                      completion:^(NSError *failure, BOOL updated) {
@@ -141,11 +150,18 @@ static NSDictionary *__cachedPackages;
         NSLog(@"[Alcatraz][ATZPackageUtils] Error while updating package %@! %@", package.name, failure);
         return;
       } else if (updated) {
+        BOOL notifyUser = YES;
         if ([package isKindOfClass:[ATZPlugin class]]) {
+          // we will notify user about local package update only when version was changed
+          if ([(ATZPlugin *)package localPath]) {
+            notifyUser = [(ATZPlugin *)package isOutdated];
+          }
           [(ATZPlugin *)package reloadInstalledVersion];
         }
-        [[NSNotificationCenter defaultCenter] postNotificationName:kATZPackageWasUpdatedNotification object:package];
-        [self postUserNotificationForUpdatedPackage:package];
+        if (notifyUser) {
+          [[NSNotificationCenter defaultCenter] postNotificationName:kATZPackageWasUpdatedNotification object:package];
+          [self postUserNotificationForUpdatedPackage:package];
+        }
       }
     }];
   }];
