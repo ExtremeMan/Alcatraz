@@ -53,10 +53,13 @@ static NSTimeInterval const kATZOneHour = 60*60;
     if (self = [super init]) {
         self.bundle = plugin;
         [self createMenuItem];
-        [self updateAlcatraz];
+
+        // load remote packages info and search for local packages
         [ATZPackageUtils reloadPackages];
         [NSTimer scheduledTimerWithTimeInterval:kATZOneHour target:[ATZPackageUtils class] selector:@selector(reloadPackages) userInfo:nil repeats:YES];
 
+        // update Alcatraz if required
+        [self updateAlcatraz];
     }
     return self;
 }
@@ -107,6 +110,11 @@ static NSTimeInterval const kATZOneHour = 60*60;
 }
 
 - (void)updateAlcatraz {
+    // don't udpate Alcatraz from Github in case we have local copy of it
+    if ([[[ATZPackageUtils localPackages] valueForKeyPath:@"name"] containsObject:@"Alcatraz"]) {
+      return;
+    }
+
     NSOperationQueue *queue = [[NSOperationQueue alloc] init];
     [queue addOperationWithBlock:^{
     
