@@ -24,6 +24,7 @@
 #import "ATZPackageTableCellView.h"
 #import "ATZPackage.h"
 #import "ATZPlugin.h"
+#import "ATZUtils.h"
 
 @interface ATZPackageTableCellView()
 @property (assign) BOOL isHighlighted;
@@ -61,6 +62,11 @@
         [self.versionsLabel setTitle:[NSString stringWithFormat:@"Available version: %@.", plugin.version]];
       } else {
         [self.versionsLabel setTitle:@""];
+      }
+
+      if ([plugin supportedXcodeUDIDs] && ![[plugin supportedXcodeUDIDs] containsObject:ATZCurrentXcodeUDID()]) {
+        self.versionsLabel.textColor = [[NSColor redColor] colorWithAlphaComponent:0.8];
+        [self.versionsLabel setTitle:@"Current Xcode version is not supported."];
       }
     } else {
       [self.versionsLabel setTitle:@""];

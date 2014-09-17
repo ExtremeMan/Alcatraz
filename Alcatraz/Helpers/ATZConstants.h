@@ -24,6 +24,7 @@ extern NSString *const kATZPackageVersionKey;
 extern NSString *const kATZPackageLocalRelativePathKey;
 extern NSString *const kATZPackageDescriptionKey;
 extern NSString *const kATZPackageCategoryKey;
+extern NSString *const kATZPlugInCompatibilityUUIDsKey;
 
 // shared names
 extern NSString *const kATZLocalPackageScreenshotName;

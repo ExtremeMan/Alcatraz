@@ -90,6 +90,21 @@ static NSString *const XCPLUGIN = @".xcplugin";
   return ([self isInstalled]) && ([self.installedVersion compare:self.version] == NSOrderedAscending);
 }
 
+- (NSArray *)supportedXcodeUDIDs
+{
+  if (_supportedXcodeUDIDs) {
+    return _supportedXcodeUDIDs;
+  }
+
+  if (![self localPath] && [self isInstalled]) {
+    _supportedXcodeUDIDs = [self _installedPackagePlist][kATZPlugInCompatibilityUUIDsKey];
+  } else if ([self localPath]) {
+    _supportedXcodeUDIDs = [self _availablePackagePlist][kATZPlugInCompatibilityUUIDsKey];
+  }
+
+  return _supportedXcodeUDIDs;
+}
+
 #pragma mark -
 #pragma mark - Helpers
 

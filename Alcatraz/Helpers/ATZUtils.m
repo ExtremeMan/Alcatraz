@@ -1,6 +1,16 @@
 #import "ATZUtils.h"
 
+#include <errno.h>
+#include <libproc.h>
+
 #import "ATZConstants.h"
+
+/**
+ _CFProcessPath is method in CFPlatform that returns a string representing 
+ the path to the executable that is running.  The implementations can be found here:
+ http://opensource.apple.com/source/CF/CF-744.18/CFPlatform.c
+ */
+char *_CFProcessPath(void);
 
 static NSMutableDictionary *__settings;
 
@@ -57,6 +67,38 @@ void ATZPluginsUpdateSettingsValueForKey(NSString *value, NSString *key)
 
   [__settings setValue:value forKey:key];
   ATZSavePluginsSettings();
+}
+
+NSString *ATZCurrentXcodePath()
+{
+  static NSString *xcodePath;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    xcodePath = [NSString stringWithUTF8String:_CFProcessPath()];
+  });
+  return xcodePath;
+}
+
+NSDictionary *ATZCurrentXcodePlist()
+{
+  static NSDictionary *dictionary;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    NSString *plistPath = [[ATZCurrentXcodePath() stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
+    plistPath = [plistPath stringByAppendingPathComponent:@"Info.plist"];
+    dictionary = [NSDictionary dictionaryWithContentsOfFile:plistPath];
+  });
+  return dictionary;
+}
+
+NSString *ATZCurrentXcodeUDID()
+{
+  static NSString *xcodeUDID;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    xcodeUDID = ATZCurrentXcodePlist()[@"DVTPlugInCompatibilityUUID"];
+  });
+  return xcodeUDID;
 }
 
 #pragma mark - 

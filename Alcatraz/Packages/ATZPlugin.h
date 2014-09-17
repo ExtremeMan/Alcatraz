@@ -29,6 +29,7 @@ static NSString *const PLUGIN_ICON_NAME = @"toolbar_plugins";
 
 @property (nonatomic, strong) NSString *version;
 @property (nonatomic, strong) NSString *installedVersion;
+@property (nonatomic, strong) NSArray *supportedXcodeUDIDs;
 
 - (void)reloadInstalledVersion;
 - (BOOL)isOutdated;

@@ -21,6 +21,7 @@ NSString *const kATZPackageVersionKey = @"CFBundleShortVersionString";
 NSString *const kATZPackageLocalRelativePathKey = @"ATZPackageLocalPath";
 NSString *const kATZPackageDescriptionKey = @"ATZPackageDescription";
 NSString *const kATZPackageCategoryKey = @"ATZPackageCategory";
+NSString *const kATZPlugInCompatibilityUUIDsKey = @"DVTPlugInCompatibilityUUIDs";
 
 NSString *const kATZLocalPackageScreenshotName = @"ATZPluginScreenshot.png";
 
