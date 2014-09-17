@@ -11,6 +11,7 @@ extern NSString *const kATZCachedRemotePackagesListKey;
 extern NSString *const kATZCachedLocalPackagesListKey;
 extern NSString *const kATZSettingsFile;
 extern NSString *const kATZSettingsPackageSourcesPathKey;
+extern NSString *const kATZSettingsPackagesToBeInstalledKey;
 
 // commin keys in dictionaries
 extern NSString *const kATZColorSchemesKey;

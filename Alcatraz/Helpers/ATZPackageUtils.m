@@ -121,9 +121,18 @@ static NSDictionary *__cachedPackages;
 
 + (void)updatePackages:(NSArray *)packages
 {
+  NSDictionary *packagesToBeInstalled = ATZPluginsSettings()[kATZSettingsPackagesToBeInstalledKey];
+  NSArray *localPackagesToBeInstalled = [packagesToBeInstalled[kATZCachedLocalPackagesListKey] valueForKeyPath:@"name"];
+  NSArray *remotePackagesToBeInstalled = [packagesToBeInstalled[kATZCachedRemotePackagesListKey] valueForKeyPath:@"name"];
   for (ATZPackage *package in packages) {
     if ([package isInstalled]) {
       [self enqueuePackageUpdate:package];
+    } else {
+      if (package.localPath && [localPackagesToBeInstalled containsObject:package.name]) {
+        [self enqueuePackageInstallation:package];
+      } else if (!package.localPath && [remotePackagesToBeInstalled containsObject:package.name]) {
+        [self enqueuePackageInstallation:package];
+      }
     }
   }
 }
@@ -147,7 +156,7 @@ static NSDictionary *__cachedPackages;
     [package updateWithProgress:^(NSString *progressMessage, CGFloat progress){}
                      completion:^(NSError *failure, BOOL updated) {
       if (failure) {
-        NSLog(@"[Alcatraz][ATZPackageUtils] Error while updating package %@! %@", package.name, failure);
+        NSLog(@"[Alcatraz][ATZPackageUtils] Package \"%@\" update failed with error: %@", package.name, failure);
         return;
       } else if (updated) {
         BOOL notifyUser = YES;
@@ -163,6 +172,25 @@ static NSDictionary *__cachedPackages;
           [self postUserNotificationForUpdatedPackage:package];
         }
       }
+    }];
+  }];
+  if ([[NSOperationQueue mainQueue] operations].lastObject) {
+    [updateOperation addDependency:[[NSOperationQueue mainQueue] operations].lastObject];
+  }
+  [[NSOperationQueue mainQueue] addOperation:updateOperation];
+}
+
++ (void)enqueuePackageInstallation:(ATZPackage *)package
+{
+  NSOperation *updateOperation = [NSBlockOperation blockOperationWithBlock:^{
+    [package installWithProgress:^(NSString *proggressMessage, CGFloat progress){}
+                      completion:^(NSError *failure) {
+      if (failure) {
+        NSLog(@"[Alcatraz][ATZPackageUtils] Package \"%@\" installation failed with error: %@", package.name, failure);
+        return;
+      }
+      [[NSNotificationCenter defaultCenter] postNotificationName:kATZPackageWasInstalledNotification object:package];
+      [self postUserNotificationForInstalledPackage:package];
     }];
   }];
   if ([[NSOperationQueue mainQueue] operations].lastObject) {

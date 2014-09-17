@@ -10,6 +10,7 @@ NSString *const kATZCachedRemotePackagesListKey = @"remote";
 NSString *const kATZCachedLocalPackagesListKey = @"local";
 NSString *const kATZSettingsFile = @"settings.plist";
 NSString *const kATZSettingsPackageSourcesPathKey = @"ATZPackageSourcesPath";;
+NSString *const kATZSettingsPackagesToBeInstalledKey = @"ATZPackagesToBeInstalled";
 
 NSString *const kATZColorSchemesKey = @"color_schemes";
 NSString *const kATZProjectTemplatesKey = @"project_templates";
