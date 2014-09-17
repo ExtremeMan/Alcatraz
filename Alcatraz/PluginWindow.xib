@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <deployment version="1080" defaultVersion="1080" identifier="macosx"/>
+        <deployment version="1080" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
     </dependencies>
     <objects>
@@ -508,7 +508,7 @@
                         </connections>
                     </searchField>
                     <segmentedControl focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="1lO-z8-UW7">
-                        <rect key="frame" x="11" y="608" width="140" height="25"/>
+                        <rect key="frame" x="11" y="608" width="199" height="25"/>
                         <segmentedCell key="cell" borderStyle="border" focusRingType="none" alignment="left" style="texturedSquare" trackingMode="selectOne" id="vaZ-Yu-jkt" customClass="ATZSegmentedCell">
                             <font key="font" metaFont="system"/>
                             <segments>
@@ -523,6 +523,7 @@
                                     <nil key="label"/>
                                 </segment>
                                 <segment label="New" toolTip="Recently Added Packages" width="33"/>
+                                <segment label="Installed" width="58"/>
                             </segments>
                         </segmentedCell>
                         <connections>

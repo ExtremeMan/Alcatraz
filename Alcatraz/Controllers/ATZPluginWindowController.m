@@ -49,6 +49,7 @@ typedef enum : NSInteger {
 static NSString *const ALL_ITEMS_ID = @"AllItemsToolbarItem";
 static NSString *const CLASS_PREDICATE_FORMAT = @"(self isKindOfClass: %@)";
 static NSString *const NEW_PREDICATE_FORMAT = @"(name IN %@)";
+static NSString *const INSTALLED_PREDICATE_FORMAT = @"(isInstalled == YES)";
 static NSString *const SEARCH_PREDICATE_FORMAT = @"(name contains[cd] %@ OR summary contains[cd] %@)";
 
 @interface ATZPluginWindowController () <NSTabViewDelegate, NSTableViewDelegate, NSControlTextEditingDelegate, NSPathControlDelegate>
@@ -285,6 +286,11 @@ BOOL hasPressedCommandF(NSEvent *event) {
     return ([event modifierFlags] & NSCommandKeyMask) && [[event characters] characterAtIndex:0] == 'f';
 }
 
+- (NSString *)searchPredicateForString:(NSString *)string
+{
+  return [NSString stringWithFormat:SEARCH_PREDICATE_FORMAT, string, string];
+}
+
 - (void)updatePredicate {
   NSMutableArray *predicates = [NSMutableArray arrayWithCapacity:2];
   switch ([_segmentedControl selectedSegment]) {
@@ -298,6 +304,10 @@ BOOL hasPressedCommandF(NSEvent *event) {
       [predicates addObject:[NSPredicate predicateWithFormat:NEW_PREDICATE_FORMAT, addedSet]];
       break;
     }
+
+    case ATZFilterSegmentInstalled:
+      [predicates addObject:[NSPredicate predicateWithFormat:INSTALLED_PREDICATE_FORMAT]];
+      break;
 
     default:
     {

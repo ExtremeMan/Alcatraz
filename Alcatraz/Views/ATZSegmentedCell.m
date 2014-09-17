@@ -16,27 +16,32 @@
 
 static NSString *const ALL_ITEMS_TITLE = @"All";
 static NSString *const NEW_ITEMS_TITLE = @"New";
+static NSString *const INSTALLED_ITEMS_TITLE = @"Installed";
 
 @implementation ATZSegmentedCell
 
 - (void)drawSegment:(NSInteger)segment inFrame:(NSRect)frame withView:(NSView *)controlView {
+    double offset = 0;
+    for (int i=0; i<segment; i++) {
+        offset += [self widthForSegment:i];
+    }
+
+    CGRect segmentFrame = CGRectIntegral(CGRectMake(offset,
+                                                    frame.origin.y,
+                                                    frame.size.width,
+                                                    frame.size.height));
     if (ATZFilterSegmentAll == segment) {
-        [self drawAllItemsSegmentInFrame:frame];
+        [self drawAllItemsSegmentInFrame:segmentFrame];
     } else if (ATZFilterSegmentNew == segment) {
-      CGFloat cellWidth = frame.size.width / self.segmentCount;
-      CGRect segmentFrame = CGRectIntegral(CGRectMake(segment * cellWidth,
-                                                      frame.origin.y,
-                                                      frame.size.width,
-                                                      frame.size.height));
         [self drawNewItemsSegmentInFrame:segmentFrame];
+    } else if (ATZFilterSegmentInstalled == segment) {
+        [self drawInstalledItemsSegmentInFrame:segmentFrame];
     } else {
         NSImage *icon = [self iconForSegment:segment];
-        CGFloat cellWidth = frame.size.width / self.segmentCount;
-        CGRect segmentFrame = CGRectIntegral(CGRectMake(segment * cellWidth,
-                                                        -((frame.size.height - icon.size.height) / 2), // we're drawing in a flipped context
-                                                        icon.size.width,
-                                                        icon.size.height));
         NSColor * color = [self colorForSegmentAtIndex:segment];
+        // we're drawing in a flipped context
+        segmentFrame.origin.y = -(frame.size.height - icon.size.height)/2;
+        segmentFrame.size = icon.size;
         [NSImage drawImage:icon withColor:color inFrame:segmentFrame flipVertically:YES];
     }
 }
@@ -72,20 +77,29 @@ static NSString *const NEW_ITEMS_TITLE = @"New";
     return [[[Alcatraz sharedPlugin] bundle] imageForResource:[self segmentIconMapping][@(segment)]];
 }
 
+- (void)drawString:(NSAttributedString *)string inRect:(CGRect)frame
+{
+    frame.origin.y = (frame.size.height - string.size.height) - 3;
+    [string drawInRect:frame];
+}
+
 - (void)drawAllItemsSegmentInFrame:(CGRect)frame {
-    BOOL selected = self.selectedSegment == 0;
+    BOOL selected = self.selectedSegment == ATZFilterSegmentAll;
     NSAttributedString *title = selected ? [self allItemsLabelSelected] : [self allItemsLabelUnselected];
-    frame.origin.y = (frame.size.height - title.size.height) - 2;
-    [title drawInRect:frame];
+    [self drawString:title inRect:frame];
 }
 
 - (void)drawNewItemsSegmentInFrame:(CGRect)frame {
-  BOOL selected = self.selectedSegment == 4;
-  NSAttributedString *title = selected ? [self newItemsLabelSelected] : [self newItemsLabelUnselected];
-  frame.origin.y = (frame.size.height - title.size.height) - 2;
-  [title drawInRect:frame];
+    BOOL selected = self.selectedSegment == ATZFilterSegmentNew;
+    NSAttributedString *title = selected ? [self newItemsLabelSelected] : [self newItemsLabelUnselected];
+    [self drawString:title inRect:frame];
 }
 
+- (void)drawInstalledItemsSegmentInFrame:(CGRect)frame {
+    BOOL selected = self.selectedSegment == ATZFilterSegmentInstalled;
+    NSAttributedString *title = selected ? [self installedItemsLabelSelected] : [self installedItemsLabelUnselected];
+    [self drawString:title inRect:frame];
+}
 
 #pragma mark -
 #pragma mark Working with labels
@@ -149,6 +163,24 @@ static NSString *const NEW_ITEMS_TITLE = @"New";
   static NSAttributedString *labelSelected;
   if (!labelSelected) {
     labelSelected = [[NSAttributedString alloc] initWithString:NEW_ITEMS_TITLE
+                                                    attributes:[self attributesForTitleStateSelected:YES]];
+  }
+  return labelSelected;
+}
+
+- (NSAttributedString *)installedItemsLabelUnselected {
+  static NSAttributedString *labelUnselected;
+  if (!labelUnselected) {
+    labelUnselected = [[NSAttributedString alloc] initWithString:INSTALLED_ITEMS_TITLE
+                                                      attributes:[self attributesForTitleStateSelected:NO]];
+  }
+  return labelUnselected;
+}
+
+- (NSAttributedString *)installedItemsLabelSelected {
+  static NSAttributedString *labelSelected;
+  if (!labelSelected) {
+    labelSelected = [[NSAttributedString alloc] initWithString:INSTALLED_ITEMS_TITLE
                                                     attributes:[self attributesForTitleStateSelected:YES]];
   }
   return labelSelected;
