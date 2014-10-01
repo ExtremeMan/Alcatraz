@@ -31,4 +31,5 @@ NSString *const kATZPackageWasInstalledNotification = @"ATZPackageWasInstalledNo
 NSString *const kATZPackageWasUpdatedNotification = @"ATZPackageWasUpdatedNotification";
 
 NSString *const kATZXcodeProjExtension = @"xcodeproj";
+NSString *const kATZXcodeWorkspaceExtension = @"xcworkspace";
 NSString *const KATZProjectPbxprojFileName = @"project.pbxproj";

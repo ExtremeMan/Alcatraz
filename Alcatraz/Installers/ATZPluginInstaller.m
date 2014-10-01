@@ -33,6 +33,8 @@ static NSString *const DOWNLOADED_PLUGINS_RELATIVE_PATH = @"Plug-ins";
 
 static NSString *const XCODE_BUILD = @"/usr/bin/xcodebuild";
 static NSString *const PROJECT = @"-project";
+static NSString *const WORKSPACE = @"-workspace";
+static NSString *const SCHEME = @"-scheme";
 
 @implementation ATZPluginInstaller
 
@@ -106,39 +108,61 @@ static NSString *const PROJECT = @"-project";
 
 - (void)buildPlugin:(ATZPlugin *)plugin completion:(void (^)(NSError *))completion {
 
-    NSString *xcodeProjPath;
+    NSString *buildDir = [[self pathForDownloadedPackage:plugin] stringByAppendingPathComponent:@"build"];
+    NSMutableArray *buildArguments = [NSMutableArray arrayWithObject:@"build"];
 
-    @try { xcodeProjPath = [self findXcodeprojPathForPlugin:plugin]; }
-    @catch (NSException *exception) {
+    NSString *xcodeWorkspacePath = [self findXcodeWorkspacePathForPlugin:plugin];
+    if (xcodeWorkspacePath) {
+      [buildArguments insertObjects:@[WORKSPACE, xcodeWorkspacePath, SCHEME, plugin.name] atIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 4)]];
+      [buildArguments addObjectsFromArray:@[@"-derivedDataPath", buildDir]];
+    } else {
+      NSString *xcodeProjPath;
+
+      @try { xcodeProjPath = [self findXcodeprojPathForPlugin:plugin]; }
+      @catch (NSException *exception) {
         completion([NSError errorWithDomain:exception.reason code:666 userInfo:nil]);
         return;
+      }
+
+      [buildArguments insertObjects:@[PROJECT, xcodeProjPath] atIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, 2)]];
     }
 
     ATZShell *shell = [ATZShell new];
-    [shell executeCommand:XCODE_BUILD withArguments:@[PROJECT, xcodeProjPath, @"build"] completion:^(NSString *output, NSError *error) {
+    [shell executeCommand:XCODE_BUILD withArguments:buildArguments completion:^(NSString *output, NSError *error) {
         NSLog(@"Xcodebuild output: %@", output);
         completion(error);
 
         // remove build folder
-        NSString *buildDir = [[xcodeProjPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"build"];
         ATZShell *shell = [ATZShell new];
         [shell executeCommand:@"/bin/rm" withArguments:@[@"-r", buildDir] completion:^(NSString *output, NSError *rmError) {}];
     }];
 }
 
+- (NSString *)findFile:(NSString *)filename inDirectory:(NSString *)directory {
+  NSDirectoryEnumerator *enumerator = [[NSFileManager sharedManager] enumeratorAtPath:directory];
+  NSString *directoryEntry;
+
+  while (directoryEntry = [enumerator nextObject])
+    if ([directoryEntry.pathComponents.lastObject isEqualToString:filename])
+      return [directory stringByAppendingPathComponent:directoryEntry];
+  return nil;
+}
+
 - (NSString *)findXcodeprojPathForPlugin:(ATZPlugin *)plugin {
     NSString *clonedDirectory = [self pathForDownloadedPackage:plugin];
     NSString *xcodeProjFilename = [plugin.name stringByAppendingPathExtension:kATZXcodeProjExtension];
-
-    NSDirectoryEnumerator *enumerator = [[NSFileManager sharedManager] enumeratorAtPath:clonedDirectory];
-    NSString *directoryEntry;
-
-    while (directoryEntry = [enumerator nextObject])
-        if ([directoryEntry.pathComponents.lastObject isEqualToString:xcodeProjFilename])
-            return [clonedDirectory stringByAppendingPathComponent:directoryEntry];
-
+    NSString *projectPath = [self findFile:xcodeProjFilename inDirectory:clonedDirectory];
+    if (projectPath) {
+      return projectPath;
+    }
     NSLog(@"Wasn't able to find: %@ in %@", xcodeProjFilename, clonedDirectory);
     @throw [NSException exceptionWithName:@"Not found" reason:@".xcodeproj was not found" userInfo:nil];
+}
+
+- (NSString *)findXcodeWorkspacePathForPlugin:(ATZPlugin *)plugin {
+  NSString *clonedDirectory = [self pathForDownloadedPackage:plugin];
+  NSString *xcodeWorkspaceFilename = [plugin.name stringByAppendingPathExtension:kATZXcodeWorkspaceExtension];
+  return [self findFile:xcodeWorkspaceFilename inDirectory:clonedDirectory];
 }
 
 - (NSString *)installNameFromPbxproj:(ATZPackage *)package {

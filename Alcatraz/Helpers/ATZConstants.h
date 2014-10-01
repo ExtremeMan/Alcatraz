@@ -37,5 +37,6 @@ extern NSString *const kATZPackageWasUpdatedNotification;
 
 // other constants
 extern NSString *const kATZXcodeProjExtension;
+extern NSString *const kATZXcodeWorkspaceExtension;
 extern NSString *const KATZProjectPbxprojFileName;
 
