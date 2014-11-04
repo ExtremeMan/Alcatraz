@@ -17,6 +17,8 @@ static NSMutableSet *__addedLocalPackageNames;
 
 static NSDictionary *__cachedPackages;
 
+static NSOperationQueue *__installationQueue;
+
 @interface ATZPackageUtils () <NSUserNotificationCenterDelegate>
 @end
 
@@ -33,6 +35,14 @@ static NSDictionary *__cachedPackages;
     shared = [[ATZPackageUtils alloc] init];
   });
   return shared;
+}
+
++ (void)initialize
+{
+  __installationQueue = [[NSOperationQueue alloc] init];
+  __installationQueue.qualityOfService = NSQualityOfServiceBackground;
+  __installationQueue.maxConcurrentOperationCount = 1;
+  __installationQueue.name = @"Alcatraz Package Installation Queue";
 }
 
 #pragma mark -
@@ -153,11 +163,12 @@ static NSDictionary *__cachedPackages;
   }
 
   NSOperation *updateOperation = [NSBlockOperation blockOperationWithBlock:^{
+    CFRunLoopRef currentRunLoop = CFRunLoopGetCurrent();
+    __block BOOL running = YES;
     [package updateWithProgress:^(NSString *progressMessage, CGFloat progress){}
                      completion:^(NSError *failure, BOOL updated) {
       if (failure) {
         NSLog(@"[Alcatraz][ATZPackageUtils] Package \"%@\" update failed with error: %@", package.name, failure);
-        return;
       } else if (updated) {
         BOOL notifyUser = YES;
         if ([package isKindOfClass:[ATZPlugin class]]) {
@@ -172,31 +183,41 @@ static NSDictionary *__cachedPackages;
           [self postUserNotificationForUpdatedPackage:package];
         }
       }
+      running = NO;
+      CFRunLoopStop(currentRunLoop);
     }];
+
+    while (running) {
+      CFRunLoopRun();
+    }
   }];
-  if ([[NSOperationQueue mainQueue] operations].lastObject) {
-    [updateOperation addDependency:[[NSOperationQueue mainQueue] operations].lastObject];
-  }
-  [[NSOperationQueue mainQueue] addOperation:updateOperation];
+  updateOperation.queuePriority = NSOperationQueuePriorityVeryLow;
+  [__installationQueue addOperation:updateOperation];
 }
 
 + (void)enqueuePackageInstallation:(ATZPackage *)package
 {
   NSOperation *updateOperation = [NSBlockOperation blockOperationWithBlock:^{
+    CFRunLoopRef currentRunLoop = CFRunLoopGetCurrent();
+    __block BOOL running = YES;
     [package installWithProgress:^(NSString *proggressMessage, CGFloat progress){}
                       completion:^(NSError *failure) {
       if (failure) {
         NSLog(@"[Alcatraz][ATZPackageUtils] Package \"%@\" installation failed with error: %@", package.name, failure);
-        return;
+      } else {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kATZPackageWasInstalledNotification object:package];
+        [self postUserNotificationForInstalledPackage:package];
       }
-      [[NSNotificationCenter defaultCenter] postNotificationName:kATZPackageWasInstalledNotification object:package];
-      [self postUserNotificationForInstalledPackage:package];
+      running = NO;
+      CFRunLoopStop(currentRunLoop);
     }];
+
+    while (running) {
+      CFRunLoopRun();
+    }
   }];
-  if ([[NSOperationQueue mainQueue] operations].lastObject) {
-    [updateOperation addDependency:[[NSOperationQueue mainQueue] operations].lastObject];
-  }
-  [[NSOperationQueue mainQueue] addOperation:updateOperation];
+  updateOperation.queuePriority = NSOperationQueuePriorityNormal;
+  [__installationQueue addOperation:updateOperation];
 }
 
 #pragma mark -
