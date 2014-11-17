@@ -106,7 +106,7 @@
 
 - (void)showButtonsIfNeeded {
     NSPoint globalLocation = [NSEvent mouseLocation];
-    NSPoint windowLocation = [self.window convertScreenToBase:globalLocation];
+    NSPoint windowLocation = [self.window convertRectFromScreen:(CGRect){.origin = globalLocation}].origin;
     NSPoint viewLocation = [self convertPoint:windowLocation fromView:nil];
     if (NSPointInRect(viewLocation, self.bounds)) {
         [self setButtonsHighlighted:YES animated:YES];
