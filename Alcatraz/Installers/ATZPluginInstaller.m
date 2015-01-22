@@ -52,7 +52,13 @@ static NSString *const SCHEME = @"-scheme";
 
 - (void)updatePackage:(ATZPackage *)package completion:(void(^)(NSString *, NSError *))completion {
     if (package.localPath) {
-      completion(@"Local package should be updated manually", nil);
+#ifndef DISABLE_LOCAL_PACKAGES_AUTOUPDATE
+      completion(@"Autoupdate local packages", nil);
+#else
+      completion(nil, [NSError errorWithDomain:@"installer"
+                                          code:-1
+                                      userInfo:@{NSLocalizedDescriptionKey:@"Local package should be updated manually"}]);
+#endif
       return;
     }
 

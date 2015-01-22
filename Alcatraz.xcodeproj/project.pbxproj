@@ -558,6 +558,10 @@
 				DSTROOT = "$(HOME)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Alcatraz/Alcatraz-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"DISABLE_LOCAL_PACKAGES_AUTOUPDATE=1",
+				);
 				INFOPLIST_FILE = "Alcatraz/Alcatraz-Info.plist";
 				INSTALL_PATH = "/Library/Application Support/Developer/Shared/Xcode/Plug-ins";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
@@ -576,6 +580,7 @@
 				DSTROOT = "$(HOME)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Alcatraz/Alcatraz-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = "DISABLE_LOCAL_PACKAGES_AUTOUPDATE=1";
 				INFOPLIST_FILE = "Alcatraz/Alcatraz-Info.plist";
 				INSTALL_PATH = "/Library/Application Support/Developer/Shared/Xcode/Plug-ins";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
